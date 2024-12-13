@@ -15,7 +15,7 @@ from omegaconf import OmegaConf
 import sam2
 
 # Check if the user is running Python from the parent directory of the sam2 repo
-# (i.e. the directory where this repo is cloned into) -- this is not supported since
+# (i.e. the directory wno_gradhere this repo is cloned into) -- this is not supported since
 # it could shadow the sam2 package and cause issues.
 if os.path.isdir(os.path.join(sam2.__path__[0], "sam2")):
     # If the user has "sam2/sam2" in their path, they are likey importing the repo itself
