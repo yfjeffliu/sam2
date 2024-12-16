@@ -340,25 +340,11 @@ class SAM2Base(torch.nn.Module):
             # a learned `no_mask_embed` to indicate no mask input in this case).
             sam_mask_prompt = None
 
-        global empty_input_sparse_embeddings, empty_input_dense_embeddings
-        if sam_mask_prompt is None and point_inputs is None:
-            if empty_input_sparse_embeddings is None:
-                sparse_embeddings, dense_embeddings = self.sam_prompt_encoder(
-                    points=(sam_point_coords, sam_point_labels),
-                    boxes=None,
-                    masks=sam_mask_prompt,
-                )
-                empty_input_sparse_embeddings = sparse_embeddings
-                empty_input_dense_embeddings = dense_embeddings
-            else:
-                sparse_embeddings = empty_input_sparse_embeddings
-                dense_embeddings = empty_input_dense_embeddings
-        else:
-            sparse_embeddings, dense_embeddings = self.sam_prompt_encoder(
-                points=(sam_point_coords, sam_point_labels),
-                boxes=None,
-                masks=sam_mask_prompt,
-            )
+        sparse_embeddings, dense_embeddings = self.sam_prompt_encoder(
+            points=(sam_point_coords, sam_point_labels),
+            boxes=None,
+            masks=sam_mask_prompt,
+        )
         (
             low_res_multimasks,
             ious,
@@ -645,10 +631,8 @@ class SAM2Base(torch.nn.Module):
                     if self.add_tpos_enc_to_obj_ptrs:
                         t_diff_max = max_obj_ptrs_in_encoder - 1
                         tpos_dim = C if self.proj_tpos_enc_in_obj_ptrs else self.mem_dim
-                        obj_pos = (
-                            torch.tensor(pos_list)
-                            .pin_memory()
-                            .to(device=device, non_blocking=True)
+                        obj_pos = torch.tensor(pos_list).to(
+                            device=device, non_blocking=True
                         )
                         obj_pos = get_1d_sine_pe(obj_pos / t_diff_max, dim=tpos_dim)
                         obj_pos = self.obj_ptr_tpos_proj(obj_pos)
@@ -777,7 +761,7 @@ class SAM2Base(torch.nn.Module):
             )
         else:
             # fused the visual feature with previous memory features in the memory bank
-            # time_memory_attention = time.time()
+            time_memory_attention = time.time()
             pix_feat = self._prepare_memory_conditioned_features(
                 frame_idx=frame_idx,
                 is_init_cond_frame=is_init_cond_frame,
@@ -788,7 +772,7 @@ class SAM2Base(torch.nn.Module):
                 num_frames=num_frames,
                 track_in_reverse=track_in_reverse,
             )
-            # print(f'time memory attention: {time.time() - time_memory_attention:.3f}')
+            print(f'time memory attention: {time.time() - time_memory_attention:.3f}')
             # apply SAM-style segmentation head
             # here we might feed previously predicted low-res SAM mask logits into the SAM mask decoder,
             # e.g. in demo where such logits come from earlier interaction instead of correction sampling
@@ -797,7 +781,7 @@ class SAM2Base(torch.nn.Module):
                 assert point_inputs is not None and mask_inputs is None
                 mask_inputs = prev_sam_mask_logits
             multimask_output = self._use_multimask(is_init_cond_frame, point_inputs)
-            # time_sam_heads = time.time()
+            time_sam_heads = time.time()
 
             sam_outputs = self._forward_sam_heads(
                 backbone_features=pix_feat,
@@ -806,7 +790,7 @@ class SAM2Base(torch.nn.Module):
                 high_res_features=high_res_features,
                 multimask_output=multimask_output,
             )
-            # print(f'time sam heads: {time.time() - time_sam_heads:.3f}')
+            print(f'time sam heads: {time.time() - time_sam_heads:.3f}')
         return current_out, sam_outputs, high_res_features, pix_feat
 
     def _encode_memory_in_output(
@@ -889,7 +873,7 @@ class SAM2Base(torch.nn.Module):
 
         # Finally run the memory encoder on the predicted mask to encode
         # it into a new memory feature (that can be used in future frames)
-        # time_encode_memory = time.time()
+        time_encode_memory = time.time()
         self._encode_memory_in_output(
             current_vision_feats,
             feat_sizes,
@@ -899,7 +883,7 @@ class SAM2Base(torch.nn.Module):
             object_score_logits,
             current_out,
         )
-        # print(f'time encode memory: {time.time() - time_encode_memory :.3f}')
+        print(f'time encode memory: {time.time() - time_encode_memory :.3f}')
         return current_out
 
     def _use_multimask(self, is_init_cond_frame, point_inputs):
