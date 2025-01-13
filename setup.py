@@ -169,6 +169,6 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     extras_require=EXTRA_PACKAGES,
     python_requires=">=3.10.0",
-    ext_modules=get_extensions(),
+    # ext_modules=get_extensions(),
     cmdclass=cmdclass,
 )

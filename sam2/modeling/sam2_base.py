@@ -621,6 +621,17 @@ class SAM2Base(torch.nn.Module):
                     )
                     if out is not None:
                         pos_and_ptrs.append((t_diff, out["obj_ptr"]))
+                # print(f'(t + max_obj_ptrs_in_encoder): {t + max_obj_ptrs_in_encoder}')
+                # print(f't: {t}, max_obj_ptrs_in_encoder: {max_obj_ptrs_in_encoder}')
+                for i in range(0,num_frames):
+                    # print(f'abs((t + max_obj_ptrs_in_encoder) - i): {abs((t + max_obj_ptrs_in_encoder) - i)}')
+                    if not track_in_reverse:
+                        if output_dict["non_cond_frame_outputs"].get(i, unselected_cond_outputs.get(i, None)) is not None and abs((t + max_obj_ptrs_in_encoder) - i) > max_obj_ptrs_in_encoder:
+                            output_dict["non_cond_frame_outputs"][i] = None
+                    else:
+                        if output_dict["non_cond_frame_outputs"].get(i, unselected_cond_outputs.get(i, None)) is not None and abs((t - max_obj_ptrs_in_encoder) - i) > max_obj_ptrs_in_encoder:
+                            output_dict["non_cond_frame_outputs"][i] = None
+
                 # If we have at least one object pointer, add them to the across attention
                 if len(pos_and_ptrs) > 0:
                     pos_list, ptrs_list = zip(*pos_and_ptrs)
@@ -772,7 +783,7 @@ class SAM2Base(torch.nn.Module):
                 num_frames=num_frames,
                 track_in_reverse=track_in_reverse,
             )
-            print(f'time memory attention: {time.time() - time_memory_attention:.3f}')
+            # print(f'time memory attention: {time.time() - time_memory_attention:.3f}')
             # apply SAM-style segmentation head
             # here we might feed previously predicted low-res SAM mask logits into the SAM mask decoder,
             # e.g. in demo where such logits come from earlier interaction instead of correction sampling
@@ -790,7 +801,7 @@ class SAM2Base(torch.nn.Module):
                 high_res_features=high_res_features,
                 multimask_output=multimask_output,
             )
-            print(f'time sam heads: {time.time() - time_sam_heads:.3f}')
+            # print(f'time sam heads: {time.time() - time_sam_heads:.3f}')
         return current_out, sam_outputs, high_res_features, pix_feat
 
     def _encode_memory_in_output(
@@ -883,7 +894,7 @@ class SAM2Base(torch.nn.Module):
             object_score_logits,
             current_out,
         )
-        print(f'time encode memory: {time.time() - time_encode_memory :.3f}')
+        # print(f'time encode memory: {time.time() - time_encode_memory :.3f}')
         return current_out
 
     def _use_multimask(self, is_init_cond_frame, point_inputs):

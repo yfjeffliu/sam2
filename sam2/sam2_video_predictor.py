@@ -238,6 +238,9 @@ class SAM2VideoPredictor(SAM2Base):
             reverse = False
         else:
             reverse = obj_frames_tracked[frame_idx]["reverse"]
+            
+        # reverse = False
+        
         obj_output_dict = inference_state["output_dict_per_obj"][obj_idx]
         obj_temp_output_dict = inference_state["temp_output_dict_per_obj"][obj_idx]
         # Add a frame to conditioning output if it's an initial conditioning frame or
@@ -275,7 +278,7 @@ class SAM2VideoPredictor(SAM2Base):
             # allows us to enforce non-overlapping constraints on all objects before encoding
             # them into memory.
             run_mem_encoder=False,
-            prev_sam_mask_logits=prev_sam_mask_logits,
+            # prev_sam_mask_logits=prev_sam_mask_logits,
         )
         # Add the output to the output dict (to be used as future memory)
         obj_temp_output_dict[storage_key][frame_idx] = current_out
@@ -552,7 +555,6 @@ class SAM2VideoPredictor(SAM2Base):
         reverse=False,
     ):
         """Propagate the input points across frames to track in the entire video."""
-        start_time = time.time()
         self.propagate_in_video_preflight(inference_state)
 
         obj_ids = inference_state["obj_ids"]
@@ -581,7 +583,7 @@ class SAM2VideoPredictor(SAM2Base):
                 start_frame_idx + max_frame_num_to_track, num_frames - 1
             )
             processing_order = range(start_frame_idx, end_frame_idx + 1)
-        print(f'preparation time: {time.time() - start_time:.3f}')
+        print(processing_order,flush=True)
         for frame_idx in tqdm(processing_order, desc="propagate in video"):
             pred_masks_per_obj = [None] * batch_size
             for obj_idx in range(batch_size):
@@ -615,9 +617,9 @@ class SAM2VideoPredictor(SAM2Base):
                     )
                     obj_output_dict[storage_key][frame_idx] = current_out
 
-                inference_state["frames_tracked_per_obj"][obj_idx][frame_idx] = {
-                    "reverse": reverse
-                }
+                # inference_state["frames_tracked_per_obj"][obj_idx][frame_idx] = {
+                #     "reverse": reverse
+                # }
                 pred_masks_per_obj[obj_idx] = pred_masks
 
             # Resize the output mask to the original video resolution (we directly use
@@ -629,7 +631,6 @@ class SAM2VideoPredictor(SAM2Base):
             _, video_res_masks = self._get_orig_video_res_output(
                 inference_state, all_pred_masks
             )
-            print(f'total time: {time.time() - start_time:.3f}')
             yield frame_idx, obj_ids, video_res_masks
 
     @torch.inference_mode()
