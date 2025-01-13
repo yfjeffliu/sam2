@@ -98,7 +98,7 @@ class SAM2VideoPredictor(SAM2Base):
         inference_state["frames_tracked_per_obj"] = {}
         inference_state['rds']  = None
         # Warm up the visual backbone and cache the image feature on frame 0
-        self._get_image_feature(inference_state, frame_idx=0, batch_size=1)
+        # self._get_image_feature(inference_state, frame_idx=0, batch_size=1)
         return inference_state
 
     @classmethod
@@ -718,21 +718,21 @@ class SAM2VideoPredictor(SAM2Base):
                 cache_data = pickle.loads(cache_data)
                 device = inference_state["device"]
                 image = cache_data["image"]
-                image = torch.tensor(image).to(device).float()
+                image = torch.tensor(image).to(device)
                 backbone_out = cache_data["image_embedding"]
                 inference_state["cached_features"] = {frame_idx: (image, backbone_out)}
                 # print('get preload image from redis')
             else:
                 backbone_out = None
-        if backbone_out is None:
-            # Cache miss -- we will run inference on a single image
-            # print('cache miss')
-            device = inference_state["device"]
-            image = inference_state["images"][frame_idx].to(device).float().unsqueeze(0)
-            backbone_out = self.forward_image(image)
-            # Cache the most recent frame's feature (for repeated interactions with
-            # a frame; we can use an LRU cache for more frames in the future).
-            inference_state["cached_features"] = {frame_idx: (image, backbone_out)}
+        # if backbone_out is None:
+        #     # Cache miss -- we will run inference on a single image
+        #     # print('cache miss')
+        #     device = inference_state["device"]
+        #     image = inference_state["images"][frame_idx].to(device).float().unsqueeze(0)
+        #     backbone_out = self.forward_image(image)
+        #     # Cache the most recent frame's feature (for repeated interactions with
+        #     # a frame; we can use an LRU cache for more frames in the future).
+        #     inference_state["cached_features"] = {frame_idx: (image, backbone_out)}
 
         # expand the features to have the same dimension as the number of objects
         expanded_image = image.expand(batch_size, -1, -1, -1)
