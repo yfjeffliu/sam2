@@ -1,0 +1,13 @@
+import os
+
+REDIS = os.environ.get('REDIS_SERVICE', "redis") #default=redis
+REDIS_PORT = os.environ.get('REDIS_PORT', 6379) #default=6379
+redis_max_connections = os.environ.get('REDIS_MAX_CONNECTIONS', 1024) #default=1024
+redis_cache_size = os.environ.get('REDIS_CACHE_SIZE', 500)  #default=200
+redis_cache_expire_time = os.environ.get('REDIS_CACHE_EXPIRE_TIME', 7*24*60*60)  #default=7*24*60*60
+config_input_size = os.environ.get('IMAGE_INPUT_SIZE', 1024)  #default=1024
+model_name = os.environ.get('MODEL_NAME', "sam_efficientvit_l0")  #default=EISeg
+#model_name = os.environ.get('MODEL_NAME', "med_sam_efficientvit_l0")  #default=EISeg
+#model_name = os.environ.get('MODEL_NAME', "vit_h")  #default=EISeg
+use_gpu = os.environ.get("SERVER_RUNTIME", "runc") == "nvidia"
+user_focus_preload_scope = os.environ.get("PRELOAD_SCOPE", 5) #default scope=5
