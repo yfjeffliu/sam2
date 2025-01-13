@@ -717,7 +717,8 @@ class SAM2VideoPredictor(SAM2Base):
             if cache_data is not None:
                 cache_data = pickle.loads(cache_data)
                 device = inference_state["device"]
-                image = inference_state["images"][frame_idx].to(device).float().unsqueeze(0)
+                image = cache_data["image"]
+                image = torch.tensor(image).to(device).float()
                 backbone_out = cache_data["image_embedding"]
                 inference_state["cached_features"] = {frame_idx: (image, backbone_out)}
                 # print('get preload image from redis')
@@ -742,9 +743,9 @@ class SAM2VideoPredictor(SAM2Base):
         for i, feat in enumerate(expanded_backbone_out["backbone_fpn"]):
             expanded_backbone_out["backbone_fpn"][i] = feat.expand(
                 batch_size, -1, -1, -1
-            )
+            ).to(device)
         for i, pos in enumerate(expanded_backbone_out["vision_pos_enc"]):
-            pos = pos.expand(batch_size, -1, -1, -1)
+            pos = pos.expand(batch_size, -1, -1, -1).to(device)
             expanded_backbone_out["vision_pos_enc"][i] = pos
 
         features = self._prepare_backbone_features(expanded_backbone_out)
