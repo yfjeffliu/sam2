@@ -114,7 +114,7 @@ def save_masks_to_dir(
 
 
 @torch.inference_mode()
-@torch.autocast(device_type="cpu", dtype=torch.bfloat16)
+@torch.autocast(device_type="cuda", dtype=torch.bfloat16)
 def vos_inference(
     predictor,
     base_video_dir,
@@ -245,7 +245,7 @@ def vos_inference(
 
 
 @torch.inference_mode()
-@torch.autocast(device_type="cpu", dtype=torch.bfloat16)
+@torch.autocast(device_type="cuda", dtype=torch.bfloat16)
 def vos_separate_inference_per_object(
     predictor,
     base_video_dir,
@@ -451,7 +451,6 @@ def main():
         apply_postprocessing=args.apply_postprocessing,
         hydra_overrides_extra=hydra_overrides_extra,
         vos_optimized=args.use_vos_optimized_video_predictor,
-        # device="cpu",
     )
 
     if args.use_all_masks:

@@ -14,9 +14,7 @@ from sam2.modeling.sam.mask_decoder import MaskDecoder
 from sam2.modeling.sam.prompt_encoder import PromptEncoder
 from sam2.modeling.sam.transformer import TwoWayTransformer
 from sam2.modeling.sam2_utils import get_1d_sine_pe, MLP, select_closest_cond_frames
-import time
-empty_input_sparse_embeddings = None
-empty_input_dense_embeddings = None
+
 
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
@@ -772,7 +770,6 @@ class SAM2Base(torch.nn.Module):
             )
         else:
             # fused the visual feature with previous memory features in the memory bank
-            time_memory_attention = time.time()
             pix_feat = self._prepare_memory_conditioned_features(
                 frame_idx=frame_idx,
                 is_init_cond_frame=is_init_cond_frame,
@@ -783,7 +780,6 @@ class SAM2Base(torch.nn.Module):
                 num_frames=num_frames,
                 track_in_reverse=track_in_reverse,
             )
-            # print(f'time memory attention: {time.time() - time_memory_attention:.3f}')
             # apply SAM-style segmentation head
             # here we might feed previously predicted low-res SAM mask logits into the SAM mask decoder,
             # e.g. in demo where such logits come from earlier interaction instead of correction sampling
@@ -792,7 +788,6 @@ class SAM2Base(torch.nn.Module):
                 assert point_inputs is not None and mask_inputs is None
                 mask_inputs = prev_sam_mask_logits
             multimask_output = self._use_multimask(is_init_cond_frame, point_inputs)
-            time_sam_heads = time.time()
 
             sam_outputs = self._forward_sam_heads(
                 backbone_features=pix_feat,
@@ -801,7 +796,6 @@ class SAM2Base(torch.nn.Module):
                 high_res_features=high_res_features,
                 multimask_output=multimask_output,
             )
-            # print(f'time sam heads: {time.time() - time_sam_heads:.3f}')
         return current_out, sam_outputs, high_res_features, pix_feat
 
     def _encode_memory_in_output(
@@ -884,7 +878,6 @@ class SAM2Base(torch.nn.Module):
 
         # Finally run the memory encoder on the predicted mask to encode
         # it into a new memory feature (that can be used in future frames)
-        time_encode_memory = time.time()
         self._encode_memory_in_output(
             current_vision_feats,
             feat_sizes,
@@ -894,7 +887,6 @@ class SAM2Base(torch.nn.Module):
             object_score_logits,
             current_out,
         )
-        # print(f'time encode memory: {time.time() - time_encode_memory :.3f}')
         return current_out
 
     def _use_multimask(self, is_init_cond_frame, point_inputs):

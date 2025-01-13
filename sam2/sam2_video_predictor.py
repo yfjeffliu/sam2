@@ -11,7 +11,6 @@ import torch
 import torch.nn.functional as F
 
 from tqdm import tqdm
-import time
 
 from sam2.modeling.sam2_base import NO_OBJ_SCORE, SAM2Base
 from sam2.utils.misc import concat_points, fill_holes_in_mask_scores, load_video_frames
@@ -583,7 +582,7 @@ class SAM2VideoPredictor(SAM2Base):
                 start_frame_idx + max_frame_num_to_track, num_frames - 1
             )
             processing_order = range(start_frame_idx, end_frame_idx + 1)
-        print(processing_order,flush=True)
+
         for frame_idx in tqdm(processing_order, desc="propagate in video"):
             pred_masks_per_obj = [None] * batch_size
             for obj_idx in range(batch_size):
@@ -753,7 +752,6 @@ class SAM2VideoPredictor(SAM2Base):
     ):
         """Run tracking on a single frame based on current inputs and previous memory."""
         # Retrieve correct image features
-        # start_get_image_feature = time.time()
         (
             _,
             _,
@@ -761,10 +759,8 @@ class SAM2VideoPredictor(SAM2Base):
             current_vision_pos_embeds,
             feat_sizes,
         ) = self._get_image_feature(inference_state, frame_idx, batch_size)
-        # print(f"get image feature time: {time.time() - start_get_image_feature:.3f}")
         # point and mask should not appear as input simultaneously on the same frame
         assert point_inputs is None or mask_inputs is None
-        # start_track_step = time.time()
         current_out = self.track_step(
             frame_idx=frame_idx,
             is_init_cond_frame=is_init_cond_frame,
@@ -779,7 +775,6 @@ class SAM2VideoPredictor(SAM2Base):
             run_mem_encoder=run_mem_encoder,
             prev_sam_mask_logits=prev_sam_mask_logits,
         )
-        # print(f"track step time: {time.time() - start_track_step:.3f}")
         # optionally offload the output to CPU memory to save GPU space
         storage_device = inference_state["storage_device"]
         maskmem_features = current_out["maskmem_features"]
