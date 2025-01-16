@@ -552,13 +552,14 @@ class SAM2VideoPredictor(SAM2Base):
         start_frame_idx=None,
         max_frame_num_to_track=None,
         reverse=False,
+        track_obj_list = None
     ):
         """Propagate the input points across frames to track in the entire video."""
         self.propagate_in_video_preflight(inference_state)
 
-        obj_ids = inference_state["obj_ids"]
+        obj_ids = inference_state["obj_ids"] if track_obj_list is None else track_obj_list
         num_frames = inference_state["num_frames"]
-        batch_size = self._get_obj_num(inference_state)
+        batch_size = self._get_obj_num(inference_state) if track_obj_list is None else len(track_obj_list)
 
         # set start index, end index, and processing order
         if start_frame_idx is None:
@@ -582,10 +583,13 @@ class SAM2VideoPredictor(SAM2Base):
                 start_frame_idx + max_frame_num_to_track, num_frames - 1
             )
             processing_order = range(start_frame_idx, end_frame_idx + 1)
-
+        if track_obj_list is None:
+            obj_list = range(batch_size)
+        else:
+            obj_list = [self._obj_id_to_idx(inference_state, obj_id) for obj_id in track_obj_list]
         for frame_idx in tqdm(processing_order, desc="propagate in video"):
             pred_masks_per_obj = [None] * batch_size
-            for obj_idx in range(batch_size):
+            for obj_idx in obj_list:
                 obj_output_dict = inference_state["output_dict_per_obj"][obj_idx]
                 # We skip those frames already in consolidated outputs (these are frames
                 # that received input clicks or mask). Note that we cannot directly run

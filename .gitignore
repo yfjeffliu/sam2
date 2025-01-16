@@ -11,4 +11,3 @@ checkpoints/*.pt
 demo/backend/checkpoints/*.pt
 checkpoints/*.pt
 notebooks/videos/*
-notebooks/*.ipynb
