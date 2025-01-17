@@ -12,3 +12,4 @@ demo/backend/checkpoints/*.pt
 checkpoints/*.pt
 notebooks/videos/*
 *.npy
+*.patch
