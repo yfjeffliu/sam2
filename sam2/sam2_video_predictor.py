@@ -610,7 +610,6 @@ class SAM2VideoPredictor(SAM2Base):
                         )
                 else:
                     storage_key = "non_cond_frame_outputs"
-                    start_time = time.time()
                     current_out, pred_masks = self._run_single_frame_inference(
                         inference_state=inference_state,
                         output_dict=obj_output_dict,
@@ -622,7 +621,6 @@ class SAM2VideoPredictor(SAM2Base):
                         reverse=reverse,
                         run_mem_encoder=True,
                     )
-                    # print(f'total time: {time.time() - start_time:.3f}')
                     obj_output_dict[storage_key][frame_idx] = current_out
 
                 # inference_state["frames_tracked_per_obj"][obj_idx][frame_idx] = {
@@ -774,7 +772,6 @@ class SAM2VideoPredictor(SAM2Base):
     ):
         """Run tracking on a single frame based on current inputs and previous memory."""
         # Retrieve correct image features
-        start_get_image_feature = time.time()
         (
             _,
             _,
@@ -784,7 +781,6 @@ class SAM2VideoPredictor(SAM2Base):
         ) = self._get_image_feature(inference_state, frame_idx, batch_size)
         # point and mask should not appear as input simultaneously on the same frame
         assert point_inputs is None or mask_inputs is None
-        start_track_step = time.time()
         current_out = self.track_step(
             frame_idx=frame_idx,
             is_init_cond_frame=is_init_cond_frame,
@@ -799,7 +795,6 @@ class SAM2VideoPredictor(SAM2Base):
             run_mem_encoder=run_mem_encoder,
             prev_sam_mask_logits=prev_sam_mask_logits,
         )
-        # print(f"track step time: {time.time() - start_track_step:.3f}")
 
         # optionally offload the output to CPU memory to save GPU space
         storage_device = inference_state["storage_device"]
