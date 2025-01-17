@@ -589,7 +589,7 @@ class SAM2VideoPredictor(SAM2Base):
             obj_list = [self._obj_id_to_idx(inference_state, obj_id) for obj_id in track_obj_list]
         for frame_idx in tqdm(processing_order, desc="propagate in video"):
             pred_masks_per_obj = [None] * batch_size
-            for obj_idx in obj_list:
+            for idx,obj_idx in enumerate(obj_list):
                 obj_output_dict = inference_state["output_dict_per_obj"][obj_idx]
                 # We skip those frames already in consolidated outputs (these are frames
                 # that received input clicks or mask). Note that we cannot directly run
@@ -623,7 +623,7 @@ class SAM2VideoPredictor(SAM2Base):
                 # inference_state["frames_tracked_per_obj"][obj_idx][frame_idx] = {
                 #     "reverse": reverse
                 # }
-                pred_masks_per_obj[obj_idx] = pred_masks
+                pred_masks_per_obj[idx] = pred_masks
 
             # Resize the output mask to the original video resolution (we directly use
             # the mask scores on GPU for output to avoid any CPU conversion in between)
