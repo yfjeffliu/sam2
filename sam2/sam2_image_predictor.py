@@ -127,6 +127,7 @@ class SAM2ImagePredictor:
         self._features = {"image_embed": feats[-1], "high_res_feats": feats[:-1]}
         self._is_image_set = True
         logging.info("Image embeddings computed.")
+        return backbone_out
 
     @torch.no_grad()
     def set_image_batch(
@@ -450,7 +451,7 @@ class SAM2ImagePredictor:
         assert (
             self._features is not None
         ), "Features must exist if an image has been set."
-        return self._features["image_embed"]
+        return self._features
 
     @property
     def device(self) -> torch.device:
